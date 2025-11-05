@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "166882859375",
+    "project_id": "drawing-app-firebase",
+    "storage_bucket": "drawing-app-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166882859375:android:ce87b57d50c4bd8e32309a",
+        "android_client_info": {
+          "package_name": "com.example.painting_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpjPu7-l-6J2Gv0SLuJhrMTm2fTJ4mB8s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
