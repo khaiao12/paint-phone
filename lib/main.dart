@@ -1,8 +1,10 @@
-// lib/main.dart
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'presentation/screens/main_screen.dart';
 import 'firebase_options.dart';
+import 'presentation/state/layer_provider.dart';
+import 'presentation/state/paint_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,7 +12,15 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const PaintingApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LayerProvider()),
+        ChangeNotifierProvider(create: (_) => PaintProvider()),
+      ],
+      child: const PaintingApp(),
+    ),
+  );
 }
 
 class PaintingApp extends StatelessWidget {
