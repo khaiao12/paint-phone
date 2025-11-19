@@ -37,11 +37,11 @@ class DrawingCanvas extends StatelessWidget {
       onPanEnd: (_) {
         context.read<LayerProvider>().endStroke();
       },
+
       child: Consumer<LayerProvider>(
-        builder: (context, layerProv, _) {
+        builder: (context, provider, _) {
           return CustomPaint(
-            painter: _DrawingPainter(layerProv.layers),
-            // cho chắc, bọc trong Container full size
+            painter: _DrawingPainter(provider),
             child: Container(),
           );
         },
@@ -51,18 +51,21 @@ class DrawingCanvas extends StatelessWidget {
 }
 
 class _DrawingPainter extends CustomPainter {
-  final List<List<DrawPoint>> layers;
+  final LayerProvider provider;
 
-  _DrawingPainter(this.layers);
+  _DrawingPainter(this.provider);
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final layer in layers) {
-      for (int i = 0; i < layer.length - 1; i++) {
-        final p1 = layer[i];
-        final p2 = layer[i + 1];
+    for (final layer in provider.layers) {
+      if (!layer.visible) continue;
 
-        // null = ngắt stroke, không nối
+      final points = layer.points;
+
+      for (int i = 0; i < points.length - 1; i++) {
+        final p1 = points[i];
+        final p2 = points[i + 1];
+
         if (p1.point == null || p2.point == null) continue;
 
         canvas.drawLine(p1.point!, p2.point!, p1.paint);
@@ -71,8 +74,5 @@ class _DrawingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DrawingPainter oldDelegate) {
-    // Đơn giản cho chắc chắn: luôn repaint khi gọi
-    return true;
-  }
+  bool shouldRepaint(covariant _DrawingPainter oldDelegate) => true;
 }
