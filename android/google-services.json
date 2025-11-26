@@ -12,7 +12,20 @@
           "package_name": "com.example.painting_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "166882859375-msqaqqt9nqlpc0g76t790o26j6fhmp2k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.painting_app",
+            "certificate_hash": "8147588efe5d5520e279c8d1d8f89c2a507d5a06"
+          }
+        },
+        {
+          "client_id": "166882859375-95j5fh7aqqh9dj4fql2oar8knj8f5leu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDpjPu7-l-6J2Gv0SLuJhrMTm2fTJ4mB8s"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "166882859375-95j5fh7aqqh9dj4fql2oar8knj8f5leu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "166882859375-bgihh62akt7717ojddoibb4ssjg59nme.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.paintingApp"
+              }
+            }
+          ]
         }
       }
     }
