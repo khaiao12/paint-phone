@@ -1,52 +1,53 @@
 // lib/presentation/widgets/drawing_canvas.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../state/layer_provider.dart';
 import '../state/paint_provider.dart';
 
 class DrawingCanvas extends StatelessWidget {
-  const DrawingCanvas({super.key});
+  final GlobalKey boundaryKey;
+
+  const DrawingCanvas({super.key, required this.boundaryKey});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: (details) {
-        final paintProv = context.read<PaintProvider>();
-        final layerProv = context.read<LayerProvider>();
-
-        final paint = Paint()
-          ..color = paintProv.color
-          ..strokeWidth = paintProv.strokeWidth
-          ..strokeCap = StrokeCap.round
-          ..isAntiAlias = true;
-
-        layerProv.addPoint(details.localPosition, paint);
-      },
-      onPanUpdate: (details) {
-        final paintProv = context.read<PaintProvider>();
-        final layerProv = context.read<LayerProvider>();
-
-        final paint = Paint()
-          ..color = paintProv.color
-          ..strokeWidth = paintProv.strokeWidth
-          ..strokeCap = StrokeCap.round
-          ..isAntiAlias = true;
-
-        layerProv.addPoint(details.localPosition, paint);
-      },
-      onPanEnd: (_) {
-        context.read<LayerProvider>().endStroke();
-      },
-
-      child: Consumer<LayerProvider>(
-        builder: (context, provider, _) {
-          return CustomPaint(
-            painter: _DrawingPainter(provider),
-            child: Container(),
-          );
+    return RepaintBoundary(
+      key: boundaryKey,
+      child: GestureDetector(
+        onPanStart: (details) {
+          _addPoint(context, details.localPosition);
         },
+        onPanUpdate: (details) {
+          _addPoint(context, details.localPosition);
+        },
+        onPanEnd: (_) {
+          context.read<LayerProvider>().endStroke();
+        },
+
+        child: Consumer<LayerProvider>(
+          builder: (context, provider, _) {
+            return CustomPaint(
+              painter: _DrawingPainter(provider),
+              child: Container(), // full size
+            );
+          },
+        ),
       ),
     );
+  }
+
+  void _addPoint(BuildContext context, Offset pos) {
+    final paintProv = context.read<PaintProvider>();
+    final layerProv = context.read<LayerProvider>();
+
+    final paint = Paint()
+      ..color = paintProv.color
+      ..strokeWidth = paintProv.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true;
+
+    layerProv.addPoint(pos, paint);
   }
 }
 
