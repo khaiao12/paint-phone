@@ -1,6 +1,9 @@
+// lib/presentation/screens/paint_screen.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../state/layer_provider.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/layer_list_panel.dart';
@@ -8,7 +11,7 @@ import '../widgets/brush_selector.dart';
 import '../../services/image_service.dart';
 
 class PaintScreen extends StatefulWidget {
-  final String? base64Image; // ảnh nền để vẽ đè
+  final String? base64Image; // ảnh từ gallery để vẽ đè
 
   const PaintScreen({super.key, this.base64Image});
 
@@ -19,102 +22,121 @@ class PaintScreen extends StatefulWidget {
 class _PaintScreenState extends State<PaintScreen> {
   final GlobalKey _boundaryKey = GlobalKey();
 
-  Future<void> _saveImage() async {
-    final nameController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
 
-    final imageName = await showDialog<String>(
+    // Nếu mở từ Gallery → thêm vào image-layer
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.base64Image != null && mounted) {
+        final bytes = base64Decode(widget.base64Image!);
+        await context.read<LayerProvider>().addImageLayer(bytes);
+      }
+    });
+  }
+
+  // ==============================================================
+  // SAVE IMAGE
+  // ==============================================================
+  Future<void> _saveImage() async {
+    final controller = TextEditingController();
+
+    final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Đặt tên cho ảnh"),
+      builder: (_) => AlertDialog(
+        title: const Text("Đặt tên ảnh"),
         content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            hintText: "Nhập tên ảnh...",
-          ),
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Tên ảnh…"),
         ),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: const Text("Hủy")),
-          TextButton(
-              onPressed: () {
-                final name = nameController.text.trim();
-                Navigator.pop(ctx, name);
-              },
-              child: const Text("Lưu")),
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text("Lưu"),
+          ),
         ],
       ),
     );
 
-    if (imageName == null) return;
+    if (name == null) return;
 
-    final finalName = imageName.isEmpty
+    final finalName = name.isEmpty
         ? "Painting_${DateTime.now().millisecondsSinceEpoch}"
-        : imageName;
+        : name;
 
     try {
       final pngBytes = await ImageService.captureImage(_boundaryKey);
+      await ImageService.saveToFirestore(bytes: pngBytes, name: finalName);
 
-      await ImageService.saveToFirestore(
-        bytes: pngBytes,
-        name: finalName,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Đã lưu: $finalName")),
       );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Đã lưu ảnh: $finalName")),
-        );
-      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Lỗi khi lưu ảnh: $e")));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi khi lưu: $e")),
+      );
     }
   }
 
-  void _openBrushSelector() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => const BrushSelector(),
-    );
-  }
-
-  void _openLayerPanel() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => LayerListPanel(onClose: () => Navigator.pop(ctx)),
-    );
-  }
+  // ==============================================================
+  // UI
+  // ==============================================================
 
   @override
   Widget build(BuildContext context) {
     final layerProv = context.watch<LayerProvider>();
 
     return Scaffold(
+      backgroundColor: Colors.black,
+
+      // ==========================================================
+      // APP BAR 2 TẦNG
+      // ==========================================================
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(100),
         child: AppBar(
           title: const Text("Vẽ tranh"),
           centerTitle: true,
+          elevation: 2,
+          backgroundColor: Colors.blue,
+
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(50),
             child: Container(
+              color: Colors.blue.shade600,
               height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(icon: const Icon(Icons.undo), onPressed: layerProv.undo),
-                  IconButton(icon: const Icon(Icons.redo), onPressed: layerProv.redo),
-                  IconButton(icon: const Icon(Icons.layers), onPressed: _openLayerPanel),
-                  IconButton(icon: const Icon(Icons.brush), onPressed: _openBrushSelector),
-                  IconButton(icon: const Icon(Icons.save), onPressed: _saveImage),
-                  IconButton(icon: const Icon(Icons.delete), onPressed: layerProv.clearAll),
+                  _toolBtn(Icons.undo, layerProv.undo),
+                  _toolBtn(Icons.redo, layerProv.redo),
+
+                  _toolBtn(Icons.layers, () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => LayerListPanel(
+                        onClose: () => Navigator.pop(context),
+                      ),
+                    );
+                  }),
+
+                  _toolBtn(Icons.brush, () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => const BrushSelector(),
+                    );
+                  }),
+
+                  _toolBtn(Icons.save, _saveImage),
+
+                  _toolBtn(Icons.delete, layerProv.clearAll),
                 ],
               ),
             ),
@@ -122,19 +144,25 @@ class _PaintScreenState extends State<PaintScreen> {
         ),
       ),
 
-      body: Stack(
-        children: [
-          if (widget.base64Image != null)
-            Positioned.fill(
-              child: Image.memory(
-                base64Decode(widget.base64Image!),
-                fit: BoxFit.contain,
-              ),
-            ),
-
-          DrawingCanvas(boundaryKey: _boundaryKey),
-        ],
+      // ==========================================================
+      // CANVAS VẼ
+      // ==========================================================
+      body: Container(
+        color: Colors.white, // nền vẽ
+        child: SizedBox.expand(
+          child: DrawingCanvas(boundaryKey: _boundaryKey),
+        ),
       ),
+
+    );
+  }
+
+  /// Nút tool gọn đẹp
+  Widget _toolBtn(IconData icon, VoidCallback onTap) {
+    return IconButton(
+      icon: Icon(icon, size: 26, color: Colors.white),
+      onPressed: onTap,
+      splashRadius: 24,
     );
   }
 }

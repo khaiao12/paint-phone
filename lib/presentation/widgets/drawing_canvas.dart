@@ -1,9 +1,10 @@
 // lib/presentation/widgets/drawing_canvas.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../state/layer_provider.dart';
 import '../state/paint_provider.dart';
+import 'dart:ui' as ui;
 
 class DrawingCanvas extends StatelessWidget {
   final GlobalKey boundaryKey;
@@ -24,12 +25,11 @@ class DrawingCanvas extends StatelessWidget {
         onPanEnd: (_) {
           context.read<LayerProvider>().endStroke();
         },
-
         child: Consumer<LayerProvider>(
           builder: (context, provider, _) {
             return CustomPaint(
               painter: _DrawingPainter(provider),
-              child: Container(), // full size
+              child: Container(),
             );
           },
         ),
@@ -61,15 +61,30 @@ class _DrawingPainter extends CustomPainter {
     for (final layer in provider.layers) {
       if (!layer.visible) continue;
 
-      final points = layer.points;
+      // 1. Layer ảnh
+      if (layer.type == LayerType.image && layer.image != null) {
+        final img = layer.image!;
+        final src = Rect.fromLTWH(
+            0, 0, img.width.toDouble(), img.height.toDouble());
+        final dst =
+        Rect.fromLTWH(0, 0, size.width, size.height);
 
-      for (int i = 0; i < points.length - 1; i++) {
-        final p1 = points[i];
-        final p2 = points[i + 1];
+        canvas.drawImageRect(img, src, dst, Paint());
+        continue;
+      }
 
-        if (p1.point == null || p2.point == null) continue;
+      // 2. Layer vẽ
+      if (layer.type == LayerType.draw) {
+        final points = layer.points;
 
-        canvas.drawLine(p1.point!, p2.point!, p1.paint);
+        for (int i = 0; i < points.length - 1; i++) {
+          final p1 = points[i];
+          final p2 = points[i + 1];
+
+          if (p1.point == null || p2.point == null) continue;
+
+          canvas.drawLine(p1.point!, p2.point!, p1.paint);
+        }
       }
     }
   }
