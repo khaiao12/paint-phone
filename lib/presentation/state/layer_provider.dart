@@ -219,4 +219,18 @@ class LayerProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void resetCanvas() {
+    _layers
+      ..clear()
+      ..add(Layer(name: "Layer 1", type: LayerType.draw));
+
+    _currentLayerIndex = 0;
+
+    _history.clear();
+    _historyIndex = -1;
+    _saveHistory();
+
+    notifyListeners();
+  }
 }

@@ -147,12 +147,12 @@ class _PaintScreenState extends State<PaintScreen> {
       // ==========================================================
       // CANVAS VẼ
       // ==========================================================
-      body: Container(
-        color: Colors.white, // nền vẽ
-        child: SizedBox.expand(
-          child: DrawingCanvas(boundaryKey: _boundaryKey),
-        ),
-      ),
+        body: Stack(
+          children: [
+            Positioned.fill(child: Container(color: Colors.white)), // nền trắng
+            DrawingCanvas(boundaryKey: _boundaryKey),
+          ],
+        )
 
     );
   }

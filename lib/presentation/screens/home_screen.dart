@@ -1,5 +1,6 @@
-// lib/presentation/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../state/layer_provider.dart';
 import 'paint_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -20,10 +21,13 @@ class HomeScreen extends StatelessWidget {
               icon: const Icon(Icons.brush),
               label: const Text('Tạo tranh mới'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: Colors.blue,
                 minimumSize: const Size(220, 50),
               ),
               onPressed: () {
+                // ⭐ RESET CANVAS HOÀN TOÀN MỚI
+                context.read<LayerProvider>().resetCanvas();
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const PaintScreen()),
@@ -39,8 +43,9 @@ class HomeScreen extends StatelessWidget {
                 minimumSize: const Size(220, 50),
               ),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tính năng đang phát triển...')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PaintScreen()),
                 );
               },
             ),
