@@ -147,12 +147,38 @@ class _PaintScreenState extends State<PaintScreen> {
       // ==========================================================
       // CANVAS VẼ
       // ==========================================================
-        body: Stack(
-          children: [
-            Positioned.fill(child: Container(color: Colors.white)), // nền trắng
-            DrawingCanvas(boundaryKey: _boundaryKey),
-          ],
-        )
+      body: Container(
+        color: Colors.grey.shade200, // nền ngoài canvas
+        alignment: Alignment.center,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final canvasWidth = constraints.maxWidth * 0.9;
+            final canvasHeight = constraints.maxHeight * 0.75;
+
+            return Container(
+              width: canvasWidth,
+              height: canvasHeight,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black26, width: 2),
+              ),
+
+              // ⭐ CHO PHÉP ZOOM, PAN ⭐
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                boundaryMargin: const EdgeInsets.all(100),
+                clipBehavior: Clip.hardEdge,
+
+                child: ClipRect(
+                  child: DrawingCanvas(boundaryKey: _boundaryKey),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+
 
     );
   }
