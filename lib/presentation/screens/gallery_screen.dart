@@ -13,7 +13,18 @@ class GalleryScreen extends StatelessWidget {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Bộ sưu tập")),
+      backgroundColor: const Color(0xFFF5F9FF), // nền trắng xanh nhạt
+
+      appBar: AppBar(
+        title: const Text(
+          "Bộ sưu tập",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF2196F3),
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
 
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
@@ -23,17 +34,29 @@ class GalleryScreen extends StatelessWidget {
             .snapshots(),
 
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
           final docs = snapshot.data!.docs;
-          if (docs.isEmpty) return const Center(child: Text("Chưa có ảnh nào"));
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text(
+                "Chưa có ảnh nào",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+            );
+          }
 
           return GridView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
             ),
             itemCount: docs.length,
 
@@ -46,17 +69,57 @@ class GalleryScreen extends StatelessWidget {
               return GestureDetector(
                 onTap: () => _showImageOptions(context, docId, name, base64Img),
 
-                child: GridTile(
-                  footer: Container(
-                    padding: const EdgeInsets.all(4),
-                    color: Colors.black54,
-                    child: Text(
-                      name,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            )
+                          ],
+                        ),
+                        child: Image.memory(
+                          base64Decode(base64Img),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+
+                      // FOOTER OVERLAY
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withOpacity(0.0),
+                                Colors.black.withOpacity(0.55)
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Image.memory(base64Decode(base64Img), fit: BoxFit.cover),
                 ),
               );
             },
@@ -66,18 +129,24 @@ class GalleryScreen extends StatelessWidget {
     );
   }
 
-  /// MENU lựa chọn
+  //   MENU LỰA CHỌN BOTTOM SHEET
+
   void _showImageOptions(
       BuildContext context, String docId, String name, String base64Img) {
-
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
       builder: (ctx) => SafeArea(
-        child: Wrap(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.fullscreen),
-              title: const Text("Xem toàn màn hình"),
+            _optionItem(
+              ctx,
+              icon: Icons.fullscreen,
+              text: "Xem toàn màn hình",
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -91,10 +160,10 @@ class GalleryScreen extends StatelessWidget {
                 );
               },
             ),
-
-            ListTile(
-              leading: const Icon(Icons.brush),
-              title: const Text("Vẽ tiếp tranh này"),
+            _optionItem(
+              ctx,
+              icon: Icons.brush,
+              text: "Vẽ tiếp tranh này",
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -105,48 +174,83 @@ class GalleryScreen extends StatelessWidget {
                 );
               },
             ),
-
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text("Đổi tên"),
+            _optionItem(
+              ctx,
+              icon: Icons.edit,
+              text: "Đổi tên",
               onTap: () {
                 Navigator.pop(ctx);
                 _rename(context, docId, name);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text("Xóa"),
+            _optionItem(
+              ctx,
+              icon: Icons.delete,
+              text: "Xóa",
               onTap: () {
                 Navigator.pop(ctx);
                 _delete(context, docId, name);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text("Hủy"),
+            _optionItem(
+              ctx,
+              icon: Icons.close,
+              text: "Hủy",
               onTap: () => Navigator.pop(ctx),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
+  Widget _optionItem(BuildContext ctx,
+      {required IconData icon, required String text, required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF2196F3)),
+      title: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
   // ĐỔI TÊN
+
   void _rename(BuildContext context, String docId, String oldName) async {
     final controller = TextEditingController(text: oldName);
 
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Đổi tên ảnh"),
-        content: TextField(controller: controller),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          "Đổi tên ảnh",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: "Tên mới",
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF2196F3)),
+            ),
+            border: OutlineInputBorder(),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Hủy")),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-              child: const Text("Lưu")),
+            child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          TextButton(
+            child: const Text("Lưu", style: TextStyle(color: Color(0xFF2196F3))),
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+          ),
         ],
       ),
     );
@@ -163,16 +267,27 @@ class GalleryScreen extends StatelessWidget {
     );
   }
 
-  // XÓA
+  //  XÓA
+
   void _delete(BuildContext context, String docId, String name) async {
     final confirm = await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Xóa ảnh"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          "Xóa ảnh",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Text("Xóa '$name'?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Hủy")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Xóa")),
+          TextButton(
+            child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          TextButton(
+            child: const Text("Xóa", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.pop(context, true),
+          ),
         ],
       ),
     );

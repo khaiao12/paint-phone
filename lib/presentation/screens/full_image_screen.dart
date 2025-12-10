@@ -16,10 +16,46 @@ class FullImageScreen extends StatelessWidget {
     final bytes = base64Decode(base64Image);
 
     return Scaffold(
-      appBar: AppBar(title: Text(name)),
+      backgroundColor: const Color(0xFFF5F9FF), // nền trắng xanh nhạt
+      appBar: AppBar(
+        title: Text(
+          name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2196F3), // xanh dương chính
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+
       body: Center(
-        child: InteractiveViewer(
-          child: Image.memory(bytes),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InteractiveViewer(
+              maxScale: 4.0,
+              minScale: 0.8,
+              child: Image.memory(
+                bytes,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -52,11 +52,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (picked == null) return;
 
     final file = File(picked.path);
-    final ref = FirebaseStorage.instance
-        .ref("avatars/${user.uid}.jpg");
+    final ref = FirebaseStorage.instance.ref("avatars/${user.uid}.jpg");
 
     await ref.putFile(file);
-
     final url = await ref.getDownloadURL();
 
     setState(() => avatarUrl = url);
@@ -68,10 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
-    await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user.uid)
-        .set({
+    await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
       "username": usernameCtrl.text.trim(),
       "phone": phoneCtrl.text.trim(),
       "birthday": birthdayCtrl.text.trim(),
@@ -86,13 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _changePassword() {
-    FirebaseAuth.instance
-        .sendPasswordResetEmail(email: user.email!);
-
+    FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Email đổi mật khẩu đã được gửi"),
-      ),
+      const SnackBar(content: Text("Email đổi mật khẩu đã được gửi")),
     );
   }
 
@@ -107,91 +98,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F9FF),
       appBar: AppBar(
-        title: const Text("Thông tin cá nhân"),
+        title: const Text(
+          "Thông tin cá nhân",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF2196F3),
         centerTitle: true,
+        elevation: 0,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // =====================
-            //      AVATAR
-            // =====================
+
+            //           AVATAR
+
             GestureDetector(
               onTap: _pickAvatar,
-              child: CircleAvatar(
-                radius: 55,
-                backgroundColor: Colors.grey.shade300,
-                backgroundImage:
-                avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-                child: avatarUrl == null
-                    ? const Icon(Icons.camera_alt, size: 40)
-                    : null,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.blue, width: 3),
+                ),
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                  child: avatarUrl == null
+                      ? const Icon(Icons.camera_alt, size: 38, color: Colors.grey)
+                      : null,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Email
+            Text(
+              user.email ?? "Không có email",
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
               ),
             ),
 
             const SizedBox(height: 25),
 
-            // =====================
-            //      EMAIL
-            // =====================
-            Text(
-              user.email ?? "Không có email",
-              style: const TextStyle(fontSize: 16, color: Colors.black54),
+            //         PROFILE FORM CARD
+
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _inputField("Tên người dùng", usernameCtrl, icon: Icons.person),
+                  _inputField("Số điện thoại", phoneCtrl,
+                      keyboard: TextInputType.phone, icon: Icons.phone),
+                  _inputField("Ngày sinh (dd/mm/yyyy)", birthdayCtrl,
+                      icon: Icons.calendar_today),
+                ],
+              ),
             ),
 
             const SizedBox(height: 25),
 
-            // =====================
-            //   FORM FIELDS
-            // =====================
-            _inputField("Tên người dùng", usernameCtrl),
-            _inputField("Số điện thoại", phoneCtrl, keyboard: TextInputType.phone),
-            _inputField("Ngày sinh (dd/mm/yyyy)", birthdayCtrl),
+            //     CHANGE PASSWORD BUTTON
 
-            const SizedBox(height: 25),
-
-            // =====================
-            //  CHANGE PASSWORD
-            // =====================
-            ElevatedButton.icon(
-              onPressed: _changePassword,
-              icon: const Icon(Icons.lock_reset),
-              label: const Text("Đổi mật khẩu"),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _changePassword,
+                icon: const Icon(Icons.lock_reset, color: Color(0xFF1565C0)),
+                label: const Text(
+                  "Đổi mật khẩu",
+                  style: TextStyle(color: Color(0xFF1565C0)),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
 
             const SizedBox(height: 15),
 
-            // =====================
-            //  SAVE BUTTON
-            // =====================
-            ElevatedButton(
-              onPressed: _saveChanges,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                minimumSize: const Size(double.infinity, 50),
+            //       SAVE BUTTON
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2196F3),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "Lưu thay đổi",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              child: const Text("Lưu thay đổi"),
             ),
-            SizedBox(height: 30),
 
+            const SizedBox(height: 25),
+
+            //         LOGOUT BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
+                icon: const Icon(Icons.logout, color: Colors.white),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                icon: const Icon(Icons.logout),
-                label: const Text("Đăng xuất"),
+                label: const Text(
+                  "Đăng xuất",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
                 onPressed: () async {
                   await auth.signOut();
                 },
               ),
             ),
-
           ],
         ),
       ),
@@ -202,6 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       String label,
       TextEditingController controller, {
         TextInputType keyboard = TextInputType.text,
+        IconData? icon,
       }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -209,9 +259,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         controller: controller,
         keyboardType: keyboard,
         decoration: InputDecoration(
+          prefixIcon: icon != null ? Icon(icon, color: Colors.blue) : null,
           labelText: label,
+          floatingLabelStyle: const TextStyle(color: Color(0xFF2196F3)),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
+            borderRadius: BorderRadius.circular(14),
+          ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),

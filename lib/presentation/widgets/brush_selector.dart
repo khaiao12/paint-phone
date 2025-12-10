@@ -1,4 +1,3 @@
-// lib/presentation/widgets/brush_selector.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/paint_provider.dart';
@@ -16,24 +15,45 @@ class BrushSelector extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.15),
+            blurRadius: 15,
+            offset: const Offset(0, -4),
+          )
+        ],
       ),
+
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            "Brush Settings",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+          //       TITLE
+
+          Text(
+            "Cài đặt cọ vẽ",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue.shade700,
+            ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
 
-          // Preview
-          SizedBox(
-            height: 60,
+          //       BRUSH PREVIEW
+
+          Container(
+            height: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+            ),
             child: CustomPaint(
               painter: _BrushPreviewPainter(
                 color: paintProv.color.withOpacity(paintProv.opacity),
@@ -43,45 +63,64 @@ class BrushSelector extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
-          // Stroke width
+          //       SLIDER – STROKE WIDTH
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Độ dày", style: TextStyle(fontSize: 14)),
+              Text("${paintProv.strokeWidth.round()}"),
+            ],
+          ),
           Slider(
             value: paintProv.strokeWidth,
             min: 1,
             max: 40,
-            divisions: 40,
+            activeColor: Colors.blue,
             label: "${paintProv.strokeWidth.round()}",
             onChanged: (v) => paintProv.changeStrokeWidth(v),
           ),
 
-          // Opacity
+          //       SLIDER – OPACITY
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Độ đậm (Opacity)", style: TextStyle(fontSize: 14)),
+              Text("${(paintProv.opacity * 100).round()}%"),
+            ],
+          ),
           Slider(
             value: paintProv.opacity,
             min: 0.1,
             max: 1.0,
             divisions: 10,
+            activeColor: Colors.blue,
             label: "${(paintProv.opacity * 100).round()}%",
             onChanged: (v) => paintProv.changeOpacity(v),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // StrokeCap
+          //       STROKE CAP
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _capButton(context, StrokeCap.butt, "Butt"),
-              _capButton(context, StrokeCap.round, "Round"),
-              _capButton(context, StrokeCap.square, "Square"),
+              _capChip(context, StrokeCap.butt, "Butt"),
+              _capChip(context, StrokeCap.round, "Round"),
+              _capChip(context, StrokeCap.square, "Square"),
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Color palette
+          //       COLOR PALETTE
+
           SizedBox(
-            height: 40,
+            height: 48,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: palette.map((c) {
@@ -89,16 +128,24 @@ class BrushSelector extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => paintProv.changeColor(c),
                   child: Container(
-                    width: 36,
-                    height: 36,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 40,
+                    height: 40,
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
                     decoration: BoxDecoration(
                       color: c,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        width: 2,
-                        color: selected ? Colors.black : Colors.transparent,
+                        width: 3,
+                        color: selected ? Colors.blue : Colors.transparent,
                       ),
+                      boxShadow: selected
+                          ? [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          blurRadius: 8,
+                        )
+                      ]
+                          : [],
                     ),
                   ),
                 );
@@ -108,32 +155,53 @@ class BrushSelector extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // ⭐ ERASER BUTTON ⭐
-          IconButton(
-            icon: Icon(Icons.auto_fix_off, color: Colors.red),
-            onPressed: () {
-              context.read<PaintProvider>().enableEraser();
-              Navigator.pop(context); // đóng panel
-            },
+          //          ERASER BUTTON
+
+          SizedBox(
+            height: 50,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.auto_fix_off, color: Colors.white),
+              label: const Text("Tẩy", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                context.read<PaintProvider>().enableEraser();
+                Navigator.pop(context);
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _capButton(BuildContext context, StrokeCap cap, String label) {
+  // CHIP BUTTON FOR STROKE CAP
+  Widget _capChip(BuildContext context, StrokeCap cap, String label) {
     final paintProv = context.watch<PaintProvider>();
     final isSelected = paintProv.strokeCap == cap;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => paintProv.changeStrokeCap(cap),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? Colors.blue.shade100 : Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected
+              ? Border.all(color: Colors.blue, width: 2)
+              : null,
         ),
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.blue.shade900 : Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

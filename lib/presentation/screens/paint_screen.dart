@@ -11,7 +11,7 @@ import '../widgets/brush_selector.dart';
 import '../../services/image_service.dart';
 
 class PaintScreen extends StatefulWidget {
-  final String? base64Image; // ảnh từ gallery để vẽ đè
+  final String? base64Image;
 
   const PaintScreen({super.key, this.base64Image});
 
@@ -26,7 +26,6 @@ class _PaintScreenState extends State<PaintScreen> {
   void initState() {
     super.initState();
 
-    // Nếu mở từ Gallery → thêm vào image-layer
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.base64Image != null && mounted) {
         final bytes = base64Decode(widget.base64Image!);
@@ -35,24 +34,27 @@ class _PaintScreenState extends State<PaintScreen> {
     });
   }
 
-  // ==============================================================
   // SAVE IMAGE
-  // ==============================================================
+
   Future<void> _saveImage() async {
     final controller = TextEditingController();
 
     final name = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("Đặt tên ảnh"),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: "Tên ảnh…"),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Hủy")),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, controller.text.trim()),
             child: const Text("Lưu"),
           ),
         ],
@@ -80,36 +82,48 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   // ==============================================================
-  // UI
-  // ==============================================================
 
   @override
   Widget build(BuildContext context) {
     final layerProv = context.watch<LayerProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFE9F2FF), // nền xanh nhạt
 
-      // ==========================================================
-      // APP BAR 2 TẦNG
-      // ==========================================================
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
+        preferredSize: const Size.fromHeight(110),
         child: AppBar(
-          title: const Text("Vẽ tranh"),
+          backgroundColor: const Color(0xFF2196F3),
+          elevation: 3,
           centerTitle: true,
-          elevation: 2,
-          backgroundColor: Colors.blue,
+          title: const Text(
+            "Vẽ tranh",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
 
+          // TOOLBAR DƯỚI
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(50),
+            preferredSize: const Size.fromHeight(55),
             child: Container(
-              color: Colors.blue.shade600,
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
+              height: 55,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade600,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
 
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _toolBtn(Icons.undo, layerProv.undo),
                   _toolBtn(Icons.redo, layerProv.redo),
@@ -134,7 +148,7 @@ class _PaintScreenState extends State<PaintScreen> {
                     );
                   }),
 
-                  _toolBtn(Icons.save, _saveImage),
+                  _toolBtn(Icons.save_alt, _saveImage),
 
                   _toolBtn(Icons.delete, layerProv.clearAll),
                 ],
@@ -144,12 +158,7 @@ class _PaintScreenState extends State<PaintScreen> {
         ),
       ),
 
-      // ==========================================================
-      // CANVAS VẼ
-      // ==========================================================
-      body: Container(
-        color: Colors.grey.shade200, // nền ngoài canvas
-        alignment: Alignment.center,
+      body: Center(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final canvasWidth = constraints.maxWidth * 0.9;
@@ -160,35 +169,51 @@ class _PaintScreenState extends State<PaintScreen> {
               height: canvasHeight,
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: Colors.black26, width: 2),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.20),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
 
-              // ⭐ CHO PHÉP ZOOM, PAN ⭐
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                boundaryMargin: const EdgeInsets.all(100),
-                clipBehavior: Clip.hardEdge,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
 
-                child: ClipRect(
-                  child: DrawingCanvas(boundaryKey: _boundaryKey),
+                // ZOOM + PAN
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  boundaryMargin: const EdgeInsets.all(100),
+                  clipBehavior: Clip.hardEdge,
+                  child: ClipRect(
+                    child: DrawingCanvas(boundaryKey: _boundaryKey),
+                  ),
                 ),
               ),
             );
           },
         ),
       ),
-
-
     );
   }
 
-  /// Nút tool gọn đẹp
+  // CUSTOM TOOL BUTTON
+
   Widget _toolBtn(IconData icon, VoidCallback onTap) {
-    return IconButton(
-      icon: Icon(icon, size: 26, color: Colors.white),
-      onPressed: onTap,
-      splashRadius: 24,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 26, color: Colors.white),
+      ),
     );
   }
 }

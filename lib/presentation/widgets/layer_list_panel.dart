@@ -10,46 +10,64 @@ class LayerListPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
+      initialChildSize: 0.55,
       maxChildSize: 0.9,
       minChildSize: 0.3,
       expand: false,
       builder: (context, controller) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.15),
+                blurRadius: 12,
+                offset: const Offset(0, -3),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
 
           child: Column(
             children: [
-              /// HEADER
+
+              //           HEADER
+
               Row(
                 children: [
-                  const Text(
+                  Text(
                     "Layers",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade700,
+                    ),
                   ),
                   const Spacer(),
 
-                  /// ADD LAYER
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => context.read<LayerProvider>().addLayer(),
+                  // ADD LAYER
+                  _headerIcon(
+                    icon: Icons.add,
+                    color: Colors.green,
+                    onTap: () => context.read<LayerProvider>().addLayer(),
                   ),
 
-                  /// CLOSE PANEL
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: onClose ?? () => Navigator.pop(context),
-                  )
+                  const SizedBox(width: 6),
+
+                  // CLOSE
+                  _headerIcon(
+                    icon: Icons.close,
+                    color: Colors.redAccent,
+                    onTap: onClose ?? () => Navigator.pop(context),
+                  ),
                 ],
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
-              /// LIST OF LAYERS
+              //        LIST OF LAYERS
+
               Expanded(
                 child: Consumer<LayerProvider>(
                   builder: (context, provider, _) {
@@ -58,65 +76,86 @@ class LayerListPanel extends StatelessWidget {
                       itemCount: provider.layers.length,
                       itemBuilder: (context, index) {
                         final layer = provider.layers[index];
-                        final isSelected = index == provider.currentLayerIndex;
+                        final isSelected =
+                            index == provider.currentLayerIndex;
 
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.blue.shade100
-                                : Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
+                                ? Colors.blue.shade50
+                                : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(14),
+                            border: isSelected
+                                ? Border.all(color: Colors.blue, width: 2)
+                                : null,
+                            boxShadow: [
+                              if (isSelected)
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.20),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                            ],
                           ),
-                          child: ListTile(
-                            dense: true,
 
-                            /// TOGGLE VISIBILITY
-                            leading: IconButton(
-                              icon: Icon(
-                                layer.visible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: layer.visible
-                                    ? Colors.blue
-                                    : Colors.grey,
-                              ),
-                              onPressed: () =>
-                                  provider.toggleLayerVisibility(index),
-                            ),
-
-                            /// NAME
-                            title: Text(
-                              layer.name,
-                              style: TextStyle(
-                                fontWeight:
-                                isSelected ? FontWeight.bold : null,
-                              ),
-                            ),
-
-                            /// SELECT LAYER
-                            onTap: () => provider.selectLayer(index),
-
-                            /// EDIT + DELETE BUTTONS
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /// RENAME
-                                IconButton(
-                                  icon: const Icon(Icons.edit, size: 20),
-                                  onPressed: () =>
-                                      _renameLayer(context, provider, index),
+                          child: Row(
+                            children: [
+                              // VISIBILITY TOGGLE
+                              IconButton(
+                                icon: Icon(
+                                  layer.visible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: layer.visible
+                                      ? Colors.blue
+                                      : Colors.grey,
                                 ),
+                                onPressed: () =>
+                                    provider.toggleLayerVisibility(index),
+                              ),
 
-                                /// DELETE
-                                if (provider.layers.length > 1)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, size: 20),
-                                    onPressed: () =>
-                                        provider.removeLayer(index),
+                              const SizedBox(width: 4),
+
+                              // NAME (TAP TO SELECT)
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => provider.selectLayer(index),
+                                  child: Text(
+                                    layer.name,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.blue.shade800
+                                          : Colors.black87,
+                                    ),
                                   ),
-                              ],
-                            ),
+                                ),
+                              ),
+
+                              // RENAME BUTTON
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                color: Colors.blue.shade600,
+                                onPressed: () =>
+                                    _renameLayer(context, provider, index),
+                              ),
+
+                              // DELETE LAYER (if >1)
+                              if (provider.layers.length > 1)
+                                IconButton(
+                                  icon: const Icon(Icons.delete, size: 20),
+                                  color: Colors.red.shade400,
+                                  onPressed: () =>
+                                      provider.removeLayer(index),
+                                ),
+                            ],
                           ),
                         );
                       },
@@ -131,10 +170,31 @@ class LayerListPanel extends StatelessWidget {
     );
   }
 
-  /// RENAME LAYER FUNCTION
+  //   HEADER ICON BUTTON
+
+  Widget _headerIcon({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 22, color: color),
+      ),
+    );
+  }
+
+  //        RENAME LAYER
+
   void _renameLayer(
       BuildContext context, LayerProvider provider, int index) {
-
     final controller = TextEditingController(
       text: provider.layers[index].name,
     );
@@ -143,6 +203,8 @@ class LayerListPanel extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Đổi tên layer"),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
@@ -155,6 +217,9 @@ class LayerListPanel extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
             child: const Text("Lưu"),
             onPressed: () {
               provider.renameLayer(index, controller.text.trim());
