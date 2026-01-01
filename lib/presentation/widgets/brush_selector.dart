@@ -1,3 +1,4 @@
+// lib/presentation/widgets/brush_selector.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/paint_provider.dart';

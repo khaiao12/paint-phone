@@ -1,3 +1,4 @@
+// lib/presentation/state/paint_provider.dart
 import 'package:flutter/material.dart';
 
 class PaintProvider extends ChangeNotifier {

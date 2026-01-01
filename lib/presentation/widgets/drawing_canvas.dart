@@ -1,3 +1,4 @@
+// lib/presentation/widgets/drawing_canvas.dart
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -35,11 +36,11 @@ class DrawingCanvas extends StatelessWidget {
 
     final paint = Paint()
       ..color = paintProv.isEraser
-          ? Colors.transparent
+          ? Colors.white
           : paintProv.color.withOpacity(paintProv.opacity)
       ..strokeWidth = paintProv.strokeWidth
       ..strokeCap = paintProv.strokeCap
-      ..blendMode = paintProv.isEraser ? BlendMode.clear : BlendMode.srcOver
+      ..blendMode = BlendMode.srcOver
       ..isAntiAlias = true;
 
     layerProv.addPoint(pos, paint);

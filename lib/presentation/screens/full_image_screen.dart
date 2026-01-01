@@ -1,3 +1,4 @@
+// lib/presentation/screens/full_image_screen.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
